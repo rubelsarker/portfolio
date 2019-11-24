@@ -1,0 +1,33 @@
+public function store(Request $request)
+    {
+        $request->validate([
+            'slider_title' => 'required|max:50',
+            'slider_description' => 'max:50',
+            'slider_image' => 'required|mimes:jpeg,jpg,png',
+            ]);
+        $slider = new Slider();
+        $image = $request->file('slider_image');
+        if(isset($image)){
+            $imageName =uniqid().'.'.$image->getClientOriginalExtension();
+            $resize_path='public/upload/resize';
+            $img = Image::make($image->getRealPath());
+            $img->resize(100, 100, function ($constraint) {
+                $constraint->aspectRatio();
+            })->save($resize_path.'/'.$imageName);
+            $upload_path='public/upload/slider/';
+            $image_url=$upload_path.$imageName;
+            $image->move($upload_path,$imageName);
+        }else{
+            $image_url = "default.png";
+        }
+        $slider->slider_title = $request->slider_title;
+        $slider->slider_description = $request->slider_description;
+        $slider->slider_image = $image_url;
+        if(isset($request->status)){
+            $slider->status = 1;
+        }else{
+            $slider->status = 0;
+        }
+        $slider->save();
+        return redirect()->bacK();
+    }
